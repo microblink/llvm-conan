@@ -3,8 +3,10 @@
 #include <stdexcept>
 #include <variant>
 
-#ifndef _LIBCPP_VERSION
-#error "Not using libc++"
+#ifdef SHOULD_USE_LIBCXX
+#   ifndef _LIBCPP_VERSION
+#   error "Not using libc++"
+#   endif
 #endif
 
 enum struct Foo : std::uint8_t
@@ -26,7 +28,11 @@ using S = std::variant< Foo, Bar >;
 
 // print_size< sizeof( S ) > b;
 
-// static_assert( sizeof( S ) == 2 );
+#ifdef SHOULD_USE_LIBCXX
+static_assert( sizeof( S ) == 3 );
+#else
+static_assert( sizeof( S ) == 2 );
+#endif
 
 int check( S const & bla )
 {
@@ -40,6 +46,9 @@ int check( S const & bla )
 int main()
 {
     std::cout << "Hello, world!" << std::endl;
+#ifdef SHOULD_USE_LIBCXX
+    std::cout << "I'm using libc++ 🎉" << std::endl;
+#endif
     S bla = Foo::First;
     return check( bla );
 }

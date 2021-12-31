@@ -1,5 +1,6 @@
 from conans import ConanFile, tools
 import os
+import shutil
 
 
 # NOTE: For building armv8 version, initialize vcvars with amd64_arm64 profile and invoke
@@ -15,7 +16,6 @@ class LLVMConan(ConanFile):
         "arch_build": ['x86_64', 'armv8']
     }
     no_copy_source = True
-    exports_sources = 'llvm.zip'
 
     # forward compatibility for conan v2.0 when we ditch os_build and arch_build
     @property
@@ -28,7 +28,7 @@ class LLVMConan(ConanFile):
 
     def build_requirements(self):
         if self._host_arch == 'x86_64':
-            self.build_requires('7zip/19.0.0')
+            self.build_requires('7zip/19.00')
 
     def source(self):
         # self.run('git clone --depth 1 --branch mb-patches https://github.com/microblink/llvm-project')
@@ -60,30 +60,27 @@ class LLVMConan(ConanFile):
     def build(self):
         # download binaries here in the build function in order to support building both ARM and x64 version on
         # single (ARM) machine (using Microsoft's emulation layer)
-        # if self._host_arch == 'x86_64':
-        #     download_url = f'https://github.com/llvm/llvm-project/releases/download/llvmorg-{self.version}/' + \
-        #                    f'LLVM-{self.version}-win64.exe'
-        #     filename = 'llvm.exe'
-        # else:
-        #     download_url = f'https://github.com/llvm/llvm-project/releases/download/llvmorg-{self.version}' + \
-        #                    f'/LLVM-{self.version}-woa64.zip'
-        #     filename = 'llvm.zip'
+        if self._host_arch == 'x86_64':
+            download_url = f'https://github.com/llvm/llvm-project/releases/download/llvmorg-{self.version}/' + \
+                           f'LLVM-{self.version}-win64.exe'
+            filename = 'llvm.exe'
+        else:
+            download_url = f'https://github.com/llvm/llvm-project/releases/download/llvmorg-{self.version}' + \
+                           f'/LLVM-{self.version}-woa64.zip'
+            filename = 'llvm.zip'
 
-        # tools.download(download_url, filename)
-
-        # os.mkdir('llvm-bin')
-        # with tools.chdir('llvm-bin'):
-        #     if self._host_arch == 'x86_64':
-        #         self.output.info('Extracting llvm.exe...')
-        #         self.run('7z x ../llvm.exe')
-        #     else:
-        #         self.output.info('Extracting llvm.zip...')
-        #         tools.unzip('../llvm.zip')
+        tools.download(download_url, filename)
 
         os.mkdir('llvm-bin')
         with tools.chdir('llvm-bin'):
-            self.output.info('Extracting llvm.zip...')
-            tools.unzip(f'{self.source_folder}/llvm.zip')
+            if self._host_arch == 'x86_64':
+                self.output.info('Extracting llvm.exe...')
+                self.run('7z x ../llvm.exe')
+                shutil.rmtree('$PLUGINSDIR')
+                os.unlink('Uninstall.exe')
+            else:
+                self.output.info('Extracting llvm.zip...')
+                tools.unzip('../llvm.zip')
 
         cmake_parameters = [
             'cmake',
@@ -118,6 +115,7 @@ class LLVMConan(ConanFile):
     def package(self):
         self.copy('*', src='llvm-bin')
         self.copy('*', src='llvm-install')
+        self.copy('libcxx_windows.cmake')
 
     def _tool_name(self, tool):
         suffix = '.exe' if self.settings.os_build == 'Windows' else ''
@@ -132,20 +130,22 @@ class LLVMConan(ConanFile):
     def package_info(self):
         self.env_info.CC = self._define_tool_var('CC', 'clang-cl' if self.settings.os_build == 'Windows' else 'clang')
         self.env_info.CXX = self._define_tool_var('CXX', 'clang-cl' if self.settings.os_build == 'Windows' else 'clang++')  # noqa: E501
-        cxxflags = [
-           '-nostdinc++',
-           '-nostdlib++',
-           '-isystem',
-           f'{self.package_folder}/include/c++/v1',
-           '-D_CRT_STDIO_ISO_WIDE_SPECIFIERS'
-        ]
-        if self.settings.os_build == 'Windows':
-            self.env_info.CXXFLAGS = ' '.join([f'/clang:{x}' for x in cxxflags])
-            # for static linking
-            self.env_info.LDFLAGS = f'/nodefaultlib {self.package_folder}/lib/libc++.lib ucrt.lib libcmt.lib iso_stdio_wide_specifiers.lib libvcruntime.lib msvcprt.lib'  # noqa: E501
-        else:
-            self.env_info.CXXFLAGS = ' '.join(cxxflags)
-            self.env_info.LDFLAGS = f'-L {self.package_folder}/lib -lc++'
+
+        # NOTE: for statically linking the libc++ only (by default, MS STL is used)
+        # cxxflags = [
+        #    '-nostdinc++',
+        #    '-nostdlib++',
+        #    '-isystem',
+        #    f'{self.package_folder}/include/c++/v1',
+        #    '-D_CRT_STDIO_ISO_WIDE_SPECIFIERS'
+        # ]
+        # if self.settings.os_build == 'Windows':
+        #     self.env_info.CXXFLAGS = ' '.join([f'/clang:{x}' for x in cxxflags])
+        #     # for static linking
+        #     self.env_info.LDFLAGS = f'/nodefaultlib {self.package_folder}/lib/libc++.lib ucrt.lib libcmt.lib iso_stdio_wide_specifiers.lib libvcruntime.lib msvcprt.lib'  # noqa: E501
+        # else:
+        #     self.env_info.CXXFLAGS = ' '.join(cxxflags)
+        #     self.env_info.LDFLAGS = f'-L {self.package_folder}/lib -lc++'
 
         self.env_info.LD = self._define_tool_var('LD', 'lld-link' if self.settings.os_build == 'Windows' else 'lld')
         self.env_info.AR = self._define_tool_var('AR', 'llvm-ar')
