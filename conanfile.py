@@ -9,8 +9,10 @@ import shutil
 class LLVMConan(ConanFile):
     name = "llvm"
     version = "13.0.0"
-    url = ""
+    url = "https://github.com/microblink/llvm-conan"
+    license = "Apache 2.0 WITH LLVM-exception"
     description = "LLVM toolchain with custom build of libc++"
+    topics = ('llvm', 'compiler')
     settings = {
         "os_build": ['Windows'],
         "arch_build": ['x86_64', 'armv8']
