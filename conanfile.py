@@ -18,6 +18,9 @@ class LLVMConan(ConanFile):
         "arch_build": ['x86_64', 'armv8']
     }
     no_copy_source = True
+    options = {
+        'use_clang_cl': [True, False]
+    }
 
     # forward compatibility for conan v2.0 when we ditch os_build and arch_build
     @property
@@ -27,6 +30,9 @@ class LLVMConan(ConanFile):
     @property
     def _host_os(self):
         return self.settings.os_build
+
+    def config_options(self):
+        self.options.use_clang_cl = self.settings.os_build == 'Windows'
 
     def build_requirements(self):
         if self._host_arch == 'x86_64':
@@ -99,8 +105,8 @@ class LLVMConan(ConanFile):
         ]
 
         with tools.environment_append({
-            'CC': os.path.join(self.build_folder, 'llvm-bin', 'bin', self._tool_name('clang-cl' if self.settings.os_build == 'Windows' else 'clang')),     # noqa: E501
-            'CXX': os.path.join(self.build_folder, 'llvm-bin', 'bin', self._tool_name('clang-cl' if self.settings.os_build == 'Windows' else 'clang++')),  # noqa: E501
+            'CC': os.path.join(self.build_folder, 'llvm-bin', 'bin', self._tool_name('clang-cl' if self.options.use_clang_cl else 'clang')),     # noqa: E501
+            'CXX': os.path.join(self.build_folder, 'llvm-bin', 'bin', self._tool_name('clang-cl' if self.options.use_clang_cl else 'clang++')),  # noqa: E501
             'AR': os.path.join(self.build_folder, 'llvm-bin', 'bin', self._tool_name('llvm-ar')),
             'RANLIB': os.path.join(self.build_folder, 'llvm-bin', 'bin', self._tool_name('llvm-ranlib')),
             'NM': os.path.join(self.build_folder, 'llvm-bin', 'bin', self._tool_name('llvm-nm')),
@@ -119,6 +125,9 @@ class LLVMConan(ConanFile):
         self.copy('*', src='llvm-install')
         self.copy('libcxx_windows.cmake')
 
+    def package_id(self):
+        del self.info.options.use_clang_cl
+
     def _tool_name(self, tool):
         suffix = '.exe' if self.settings.os_build == 'Windows' else ''
         return f'{tool}{suffix}'
@@ -130,8 +139,8 @@ class LLVMConan(ConanFile):
         return path
 
     def package_info(self):
-        self.env_info.CC = self._define_tool_var('CC', 'clang-cl' if self.settings.os_build == 'Windows' else 'clang')
-        self.env_info.CXX = self._define_tool_var('CXX', 'clang-cl' if self.settings.os_build == 'Windows' else 'clang++')  # noqa: E501
+        self.env_info.CC = self._define_tool_var('CC', 'clang-cl' if self.options.use_clang_cl else 'clang')
+        self.env_info.CXX = self._define_tool_var('CXX', 'clang-cl' if self.options.use_clang_cl else 'clang++')  # noqa: E501
 
         # NOTE: for statically linking the libc++ only (by default, MS STL is used)
         # cxxflags = [
