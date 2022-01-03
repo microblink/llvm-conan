@@ -33,8 +33,13 @@ endfunction()
 MB_LLVM_add_clang_cxx_compile_options(
     -nostdinc++
     -nostdlib
-    -isystem ${llvm_root}/include/c++/v1
 )
+
+if( ${CMAKE_GENERATOR} MATCHES "Visual Studio" )
+    include_directories( BEFORE SYSTEM ${llvm_root}/include/c++/v1 )
+else()
+    include_directories( BEFORE SYSTEM $<$<COMPILE_LANGUAGE:CXX>:${llvm_root}/include/c++/v1> )
+endif()
 
 if ( MSVC )
     MB_LLVM_add_clang_cxx_compile_options( -D_CRT_STDIO_ISO_WIDE_SPECIFIERS )

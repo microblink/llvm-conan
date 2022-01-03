@@ -5,7 +5,10 @@
 
 #ifdef SHOULD_USE_LIBCXX
 #   ifndef _LIBCPP_VERSION
-#   error "Not using libc++"
+#       error "Not using libc++"
+#   endif
+#   ifndef _LIBCPP_ABI_MICROSOFT
+#       error "NOT using MS ABI"
 #   endif
 #endif
 
@@ -50,5 +53,6 @@ int main()
     std::cout << "I'm using libc++ 🎉" << std::endl;
 #endif
     S bla = Foo::First;
+    std::cout << "Size of max_align_t is " << sizeof( std::max_align_t ) << std::endl;
     return check( bla );
 }
