@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <iostream>
 #include <stdexcept>
+#include <filesystem>
 #include <variant>
 
 #ifdef SHOULD_USE_LIBCXX
@@ -54,5 +55,7 @@ int main()
 #endif
     S bla = Foo::First;
     std::cout << "Size of max_align_t is " << sizeof( std::max_align_t ) << std::endl;
+    auto currentPath{ std::filesystem::current_path() };
+    std::cout << "Current path is " << currentPath << std::endl;
     return check( bla );
 }

@@ -99,6 +99,7 @@ class LLVMConan(ConanFile):
             '-DLIBCXX_ENABLE_EXCEPTIONS=OFF',
             '-DLIBCXX_ENABLE_RTTI=ON',
             '-DLIBCXX_ENABLE_SHARED=OFF',
+            '-DLIBCXX_ENABLE_FILESYSTEM=ON',
             '-DCMAKE_C_FLAGS="-flto=thin -fsplit-lto-unit"',
             '-DCMAKE_CXX_FLAGS="-flto=thin -fsplit-lto-unit"',
             '-DCMAKE_INSTALL_PREFIX=../llvm-install',
