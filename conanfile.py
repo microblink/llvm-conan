@@ -8,7 +8,7 @@ import shutil
 # for x86_64, just use -s arch_build=x86_64
 class LLVMConan(ConanFile):
     name = "llvm"
-    version = "13.0.0"
+    version = "13.0.1"
     url = "https://github.com/microblink/llvm-conan"
     license = "Apache 2.0 WITH LLVM-exception"
     description = "LLVM toolchain with custom build of libc++"
