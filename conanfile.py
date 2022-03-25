@@ -8,7 +8,7 @@ import shutil
 # for x86_64, just use -s arch_build=x86_64
 class LLVMConan(ConanFile):
     name = "llvm"
-    version = "13.0.1"
+    version = "14.0.0"
     url = "https://github.com/microblink/llvm-conan"
     license = "Apache 2.0 WITH LLVM-exception"
     description = "LLVM toolchain with custom build of libc++"
@@ -39,31 +39,7 @@ class LLVMConan(ConanFile):
             self.build_requires('7zip/19.00')
 
     def source(self):
-        # self.run('git clone --depth 1 --branch mb-patches https://github.com/microblink/llvm-project')
-        llvm_src = f'https://github.com/llvm/llvm-project/releases/download/llvmorg-{self.version}/' + \
-                   f'llvm-{self.version}.src.tar.xz'
-        libcpp_src = f'https://github.com/llvm/llvm-project/releases/download/llvmorg-{self.version}/' + \
-                     f'libcxx-{self.version}.src.tar.xz'
-        libcppabi_src = f'https://github.com/llvm/llvm-project/releases/download/llvmorg-{self.version}/' + \
-                        f'libcxxabi-{self.version}.src.tar.xz'
-        tools.download(llvm_src, 'llvm.tar.xz')
-        tools.download(libcpp_src, 'libcxx.tar.xz')
-        tools.download(libcppabi_src, 'libcxxabi.tar.xz')
-
-        self.output.info('Unpacking llvm.tar.xz...')
-        tools.unzip('llvm.tar.xz')
-        self.output.info('Unpacking libcxx.tar.xz...')
-        tools.unzip('libcxx.tar.xz')
-        self.output.info('Unpacking libcxxabi.tar.xz...')
-        tools.unzip('libcxxabi.tar.xz')
-
-        tools.rename(f'llvm-{self.version}.src', 'llvm')
-        tools.rename(f'libcxx-{self.version}.src', 'libcxx')
-        tools.rename(f'libcxxabi-{self.version}.src', 'libcxxabi')
-
-        os.unlink('llvm.tar.xz')
-        os.unlink('libcxx.tar.xz')
-        os.unlink('libcxxabi.tar.xz')
+        self.run(f'git clone --depth 1 --branch llvmorg-{self.version} https://github.com/llvm/llvm-project')
 
     def build(self):
         # download binaries here in the build function in order to support building both ARM and x64 version on
@@ -94,14 +70,16 @@ class LLVMConan(ConanFile):
             'cmake',
             '-GNinja',
             '-DCMAKE_BUILD_TYPE=Release',
+            '-DLLVM_ENABLE_RUNTIMES="libcxx"',
+            '-DLLVM_ENABLE_LTO=Thin',
             '-DLIBCXX_ABI_VERSION=2',
             '-DLIBCXX_ABI_UNSTABLE=ON',
             '-DLIBCXX_ENABLE_EXCEPTIONS=OFF',
             '-DLIBCXX_ENABLE_RTTI=ON',
             '-DLIBCXX_ENABLE_SHARED=OFF',
             '-DLIBCXX_ENABLE_FILESYSTEM=ON',
-            '-DCMAKE_C_FLAGS="-flto=thin -fsplit-lto-unit"',
-            '-DCMAKE_CXX_FLAGS="-flto=thin -fsplit-lto-unit"',
+            '-DCMAKE_C_FLAGS="-fsplit-lto-unit"',
+            '-DCMAKE_CXX_FLAGS="-fsplit-lto-unit"',
             '-DCMAKE_INSTALL_PREFIX=../llvm-install',
         ]
 
@@ -115,11 +93,11 @@ class LLVMConan(ConanFile):
 
             os.mkdir('libcxx-build')
             with tools.chdir('libcxx-build'):
-                cmake_invocation = ' '.join(cmake_parameters + [f'{self.source_folder}/libcxx'])
+                cmake_invocation = ' '.join(cmake_parameters + [f'{self.source_folder}/llvm-project/runtimes'])
 
                 self.run(cmake_invocation)
                 self.run('ninja cxx')
-                self.run('ninja install')
+                self.run('ninja install-cxx')
 
     def package(self):
         self.copy('*', src='llvm-bin')

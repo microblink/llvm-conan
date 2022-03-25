@@ -1,3 +1,5 @@
+#include <stddef.h>
+
 #include <cstdint>
 #include <iostream>
 #include <stdexcept>
@@ -12,6 +14,7 @@
 #       error "NOT using MS ABI"
 #   endif
 #endif
+
 
 enum struct Foo : std::uint8_t
 {
