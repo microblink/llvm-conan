@@ -59,7 +59,8 @@ class LLVMConan(ConanFile):
             self.output.info('Extracting llvm.exe...')
             self.run('7z x ../llvm.exe')
             shutil.rmtree('$PLUGINSDIR')
-            os.unlink('Uninstall.exe')
+            if os.path.exists('Uninstall.exe'):
+                os.unlink('Uninstall.exe')
 
         cmake_parameters = [
             'cmake',
