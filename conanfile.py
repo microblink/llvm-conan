@@ -32,7 +32,8 @@ class LLVMConan(ConanFile):
         self.options.use_clang_cl = self.settings.os_build == 'Windows'
 
     def build_requirements(self):
-        self.build_requires('7zip/19.00')
+        if self._host_arch == 'x86_64':
+            self.build_requires('7zip/19.00')
 
     def source(self):
         self.run(f'git clone --depth 1 --branch llvmorg-{self.version} https://github.com/llvm/llvm-project')
