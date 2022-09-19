@@ -3,12 +3,9 @@ import os
 import shutil
 
 
-# NOTE: For building armv8 version, initialize vcvars with amd64_arm64 profile and invoke
-# with conan params: -s os_build=Windows -s arch_build=armv8 -s compiler=clang -s compiler.version=<version>
-# for x86_64, just use -s arch_build=x86_64
 class LLVMConan(ConanFile):
     name = "llvm"
-    version = "14.0.6"
+    version = "15.0.0"
     url = "https://github.com/microblink/llvm-conan"
     license = "Apache 2.0 WITH LLVM-exception"
     description = "LLVM toolchain with custom build of libc++"
@@ -41,30 +38,28 @@ class LLVMConan(ConanFile):
     def source(self):
         self.run(f'git clone --depth 1 --branch llvmorg-{self.version} https://github.com/llvm/llvm-project')
 
+    @property
+    def _installer_name(self):
+        if self._host_arch == 'x86_64':
+            return 'win64'
+        else:
+            return 'woa64'
+
     def build(self):
         # download binaries here in the build function in order to support building both ARM and x64 version on
         # single (ARM) machine (using Microsoft's emulation layer)
-        if self._host_arch == 'x86_64':
-            download_url = f'https://github.com/llvm/llvm-project/releases/download/llvmorg-{self.version}/' + \
-                           f'LLVM-{self.version}-win64.exe'
-            filename = 'llvm.exe'
-        else:
-            download_url = f'https://github.com/llvm/llvm-project/releases/download/llvmorg-{self.version}' + \
-                           f'/LLVM-{self.version}-woa64.zip'
-            filename = 'llvm.zip'
+        download_url = f'https://github.com/llvm/llvm-project/releases/download/llvmorg-{self.version}/' + \
+                       f'LLVM-{self.version}-{self._installer_name}.exe'
+        filename = 'llvm.exe'
 
         tools.download(download_url, filename)
 
         os.mkdir('llvm-bin')
         with tools.chdir('llvm-bin'):
-            if self._host_arch == 'x86_64':
-                self.output.info('Extracting llvm.exe...')
-                self.run('7z x ../llvm.exe')
-                shutil.rmtree('$PLUGINSDIR')
-                os.unlink('Uninstall.exe')
-            else:
-                self.output.info('Extracting llvm.zip...')
-                tools.unzip('../llvm.zip')
+            self.output.info('Extracting llvm.exe...')
+            self.run('7z x ../llvm.exe')
+            shutil.rmtree('$PLUGINSDIR')
+            os.unlink('Uninstall.exe')
 
         cmake_parameters = [
             'cmake',
