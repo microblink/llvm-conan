@@ -5,7 +5,7 @@ import os
 
 class LLVMConan(ConanFile):
     name = "llvm"
-    version = "15.0.1"
+    version = "15.0.2"
     url = "https://github.com/microblink/llvm-conan"
     license = "Apache 2.0 WITH LLVM-exception"
     description = "LLVM toolchain with custom build of libc++"
@@ -32,39 +32,12 @@ class LLVMConan(ConanFile):
     def config_options(self):
         self.options.use_clang_cl = self.settings.os_build == 'Windows'
 
-    # def build_requirements(self):
-    #     if self._host_arch == 'x86_64':
-    #         self.build_requires('7zip/19.00')
-
     def source(self):
         self.run(
             f'git clone --depth 1 --branch microblink-llvmorg-{self.version} https://github.com/microblink/llvm-project'
         )
 
-    # @property
-    # def _installer_name(self):
-    #     if self._host_arch == 'x86_64':
-    #         return 'win64'
-    #     else:
-    #         return 'woa64'
-
     def build(self):
-        # download binaries here in the build function in order to support building both ARM and x64 version on
-        # single (ARM) machine (using Microsoft's emulation layer)
-
-        # download_url = f'https://github.com/llvm/llvm-project/releases/download/llvmorg-{self.version}/' + \
-        #                f'LLVM-{self.version}-{self._installer_name}.exe'
-        # filename = 'llvm.exe'
-
-        # tools.download(download_url, filename)
-
-        # os.mkdir('llvm-bin')
-        # with tools.chdir('llvm-bin'):
-        #     self.output.info('Extracting llvm.exe...')
-        #     self.run('7z x ../llvm.exe')
-        #     shutil.rmtree('$PLUGINSDIR')
-        #     if os.path.exists('Uninstall.exe'):
-        #         os.unlink('Uninstall.exe')
 
         cmake_parameters = [
             'cmake',
@@ -98,14 +71,6 @@ class LLVMConan(ConanFile):
             '-DCMAKE_INSTALL_PREFIX=../llvm-install',
         ]
 
-        # with tools.environment_append({
-        #     'CC': os.path.join(self.build_folder, 'llvm-bin', 'bin', self._tool_name('clang-cl' if self.options.use_clang_cl else 'clang')),     # noqa: E501
-        #     'CXX': os.path.join(self.build_folder, 'llvm-bin', 'bin', self._tool_name('clang-cl' if self.options.use_clang_cl else 'clang++')),  # noqa: E501
-        #     'AR': os.path.join(self.build_folder, 'llvm-bin', 'bin', self._tool_name('llvm-ar')),
-        #     'RANLIB': os.path.join(self.build_folder, 'llvm-bin', 'bin', self._tool_name('llvm-ranlib')),
-        #     'NM': os.path.join(self.build_folder, 'llvm-bin', 'bin', self._tool_name('llvm-nm')),
-        #         }):
-
         os.mkdir('llvm-build')
         with tools.chdir('llvm-build'):
             cmake_invocation = ' '.join(cmake_parameters + [f'{self.source_folder}/llvm-project/llvm'])
@@ -115,7 +80,6 @@ class LLVMConan(ConanFile):
             self.run('ninja install')
 
     def package(self):
-        # self.copy('*', src='llvm-bin')
         self.copy('*', src='llvm-install')
         self.copy('libcxx_windows.cmake')
 
