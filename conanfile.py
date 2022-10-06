@@ -18,7 +18,6 @@ class LLVMConan(ConanFile):
     options = {
         'use_clang_cl': [True, False]
     }
-    short_paths = True
 
     # forward compatibility for conan v2.0 when we ditch os_build and arch_build
     @property
