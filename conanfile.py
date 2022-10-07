@@ -1,6 +1,12 @@
 from conans import ConanFile, tools
 import os
 
+# Package build instructions:
+# - initialize your terminal with vcvars
+# - set cc and cxx to clang-cl of the previous version of clang, that will be used for building the new package
+# - run following command:
+# conan create . microblink/stable -pr clang-windows-generic-x64 -s compiler.version=<version-used-for-building> -tf=None
+
 
 class LLVMConan(ConanFile):
     name = "llvm"
