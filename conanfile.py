@@ -43,9 +43,9 @@ class LLVMConan(ConanFile):
 
     def build(self):
 
-        additional_cc_flags = '-Ofast'
+        additional_cc_flags = '/clang:-Ofast'
         if self._host_arch == 'x86_64':
-            additional_cc_flags += ' -mavx'
+            additional_cc_flags += ' /clang:-mavx /clang:-mavx2 /clang:-mfma'
 
         cmake_parameters = [
             'cmake',
