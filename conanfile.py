@@ -43,6 +43,10 @@ class LLVMConan(ConanFile):
 
     def build(self):
 
+        additional_cc_flags = '-Ofast'
+        if self._host_arch == 'x86_64':
+            additional_cc_flags += ' -mavx'
+
         cmake_parameters = [
             'cmake',
             '-GNinja',
@@ -71,8 +75,8 @@ class LLVMConan(ConanFile):
             '-DLIBCXX_INCLUDE_BENCHMARKS=OFF',
             '-DLIBCXX_INCLUDE_TESTS=OFF,'
             '-DLIBCXX_INCLUDE_DOCS=OFF',
-            '-DCMAKE_C_FLAGS="-fsplit-lto-unit"',
-            '-DCMAKE_CXX_FLAGS="-fsplit-lto-unit"',
+            f'-DCMAKE_C_FLAGS="-fsplit-lto-unit {additional_cc_flags}"',
+            f'-DCMAKE_CXX_FLAGS="-fsplit-lto-unit {additional_cc_flags}"',
             '-DCMAKE_INSTALL_PREFIX=../llvm-install',
         ]
 
