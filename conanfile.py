@@ -1,11 +1,16 @@
 from conans import ConanFile, tools
 import os
-import shutil
+
+# Package build instructions:
+# - initialize your terminal with vcvars
+# - set cc and cxx to clang-cl of the previous version of clang, that will be used for building the new package
+# - run following command:
+# conan create . microblink/stable -pr clang-windows-generic-x64 -s compiler.version=<version-used-for-building> -tf=None
 
 
 class LLVMConan(ConanFile):
     name = "llvm"
-    version = "15.0.1"
+    version = "15.0.2"
     url = "https://github.com/microblink/llvm-conan"
     license = "Apache 2.0 WITH LLVM-exception"
     description = "LLVM toolchain with custom build of libc++"
@@ -31,72 +36,59 @@ class LLVMConan(ConanFile):
     def config_options(self):
         self.options.use_clang_cl = self.settings.os_build == 'Windows'
 
-    def build_requirements(self):
-        if self._host_arch == 'x86_64':
-            self.build_requires('7zip/19.00')
-
     def source(self):
-        self.run(f'git clone --depth 1 --branch llvmorg-{self.version} https://github.com/llvm/llvm-project')
-
-    @property
-    def _installer_name(self):
-        if self._host_arch == 'x86_64':
-            return 'win64'
-        else:
-            return 'woa64'
+        self.run(
+            f'git clone --depth 1 --branch microblink-llvmorg-{self.version} https://github.com/microblink/llvm-project'
+        )
 
     def build(self):
-        # download binaries here in the build function in order to support building both ARM and x64 version on
-        # single (ARM) machine (using Microsoft's emulation layer)
-        download_url = f'https://github.com/llvm/llvm-project/releases/download/llvmorg-{self.version}/' + \
-                       f'LLVM-{self.version}-{self._installer_name}.exe'
-        filename = 'llvm.exe'
 
-        tools.download(download_url, filename)
-
-        os.mkdir('llvm-bin')
-        with tools.chdir('llvm-bin'):
-            self.output.info('Extracting llvm.exe...')
-            self.run('7z x ../llvm.exe')
-            shutil.rmtree('$PLUGINSDIR')
-            if os.path.exists('Uninstall.exe'):
-                os.unlink('Uninstall.exe')
+        additional_cc_flags = '/clang:-Ofast'
+        if self._host_arch == 'x86_64':
+            additional_cc_flags += ' /clang:-mavx /clang:-mavx2 /clang:-mfma'
 
         cmake_parameters = [
             'cmake',
             '-GNinja',
             '-DCMAKE_BUILD_TYPE=Release',
+            '-DLLVM_ENABLE_PROJECTS="clang;lld;lldb;compiler-rt"',
             '-DLLVM_ENABLE_RUNTIMES="libcxx"',
             '-DLLVM_ENABLE_LTO=Thin',
+            '-DLLVM_PARALLEL_LINK_JOBS=3',
+            '-DLLVM_USE_LINKER="lld"',
+            '-DLLVM_ENABLE_EH=OFF',
+            '-DLLVM_ENABLE_RTTI=OFF',
+            # '-DLLVM_BUILD_LLVM_DYLIB=ON',
+            # '-DLLVM_LINK_LLVM_DYLIB=ON',
+            # '-DLLVM_ENABLE_PER_TARGET_RUNTIME_DIR=ON',
+            '-DLLVM_INCLUDE_TESTS=OFF',
+            '-DLLVM_INCLUDE_BENCHMARKS=OFF',
+            '-DCLANG_DEFAULT_LINKER=lld',
+            '-DCLANG_DEFAULT_RTLIB=compiler-rt',
+            '-DLIBCXX_USE_COMPILER_RT=YES',
             '-DLIBCXX_ABI_VERSION=2',
             '-DLIBCXX_ABI_UNSTABLE=ON',
             '-DLIBCXX_ENABLE_EXCEPTIONS=OFF',
             '-DLIBCXX_ENABLE_RTTI=ON',
             '-DLIBCXX_ENABLE_SHARED=OFF',
             '-DLIBCXX_ENABLE_FILESYSTEM=ON',
-            '-DCMAKE_C_FLAGS="-fsplit-lto-unit"',
-            '-DCMAKE_CXX_FLAGS="-fsplit-lto-unit"',
+            '-DLIBCXX_INCLUDE_BENCHMARKS=OFF',
+            '-DLIBCXX_INCLUDE_TESTS=OFF,'
+            '-DLIBCXX_INCLUDE_DOCS=OFF',
+            f'-DCMAKE_C_FLAGS="-fsplit-lto-unit {additional_cc_flags}"',
+            f'-DCMAKE_CXX_FLAGS="-fsplit-lto-unit {additional_cc_flags}"',
             '-DCMAKE_INSTALL_PREFIX=../llvm-install',
         ]
 
-        with tools.environment_append({
-            'CC': os.path.join(self.build_folder, 'llvm-bin', 'bin', self._tool_name('clang-cl' if self.options.use_clang_cl else 'clang')),     # noqa: E501
-            'CXX': os.path.join(self.build_folder, 'llvm-bin', 'bin', self._tool_name('clang-cl' if self.options.use_clang_cl else 'clang++')),  # noqa: E501
-            'AR': os.path.join(self.build_folder, 'llvm-bin', 'bin', self._tool_name('llvm-ar')),
-            'RANLIB': os.path.join(self.build_folder, 'llvm-bin', 'bin', self._tool_name('llvm-ranlib')),
-            'NM': os.path.join(self.build_folder, 'llvm-bin', 'bin', self._tool_name('llvm-nm')),
-                }):
+        os.mkdir('llvm-build')
+        with tools.chdir('llvm-build'):
+            cmake_invocation = ' '.join(cmake_parameters + [f'{self.source_folder}/llvm-project/llvm'])
 
-            os.mkdir('libcxx-build')
-            with tools.chdir('libcxx-build'):
-                cmake_invocation = ' '.join(cmake_parameters + [f'{self.source_folder}/llvm-project/runtimes'])
-
-                self.run(cmake_invocation)
-                self.run('ninja cxx')
-                self.run('ninja install-cxx')
+            self.run(cmake_invocation)
+            self.run('ninja')
+            self.run('ninja install')
 
     def package(self):
-        self.copy('*', src='llvm-bin')
         self.copy('*', src='llvm-install')
         self.copy('libcxx_windows.cmake')
 
