@@ -10,7 +10,7 @@ import os
 
 class LLVMConan(ConanFile):
     name = "llvm"
-    version = "15.0.3"
+    version = "15.0.4"
     url = "https://github.com/microblink/llvm-conan"
     license = "Apache 2.0 WITH LLVM-exception"
     description = "LLVM toolchain with custom build of libc++"
