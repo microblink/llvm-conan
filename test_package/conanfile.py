@@ -15,3 +15,5 @@ class TestPackageConan(ConanFile):
         os.chdir('bin')
         self.run('.{}test_package{}'.format(os.sep, '.exe' if self.settings.os == 'Windows' else ''))
         self.run('.{}test_package_libcxx{}'.format(os.sep, '.exe' if self.settings.os == 'Windows' else ''))
+
+# pylint: skip-file

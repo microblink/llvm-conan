@@ -10,7 +10,7 @@ import os
 
 class LLVMConan(ConanFile):
     name = "llvm"
-    version = "15.0.7"
+    version = "16.0.1"
     url = "https://github.com/microblink/llvm-conan"
     license = "Apache 2.0 WITH LLVM-exception"
     description = "LLVM toolchain with custom build of libc++"
@@ -133,3 +133,5 @@ class LLVMConan(ConanFile):
         self.env_info.OBJCOPY = self._define_tool_var('OBJCOPY', 'llvm-objcopy')
         self.env_info.OBJDUMP = self._define_tool_var('OBJDUMP', 'ollvm-bjdump')
         self.env_info.READELF = self._define_tool_var('READOBJ', 'llvm-readobj')
+
+# pylint: skip-file
