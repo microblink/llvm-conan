@@ -4,8 +4,11 @@ import os
 # Package build instructions:
 # - initialize your terminal with vcvars
 # - set cc and cxx to clang-cl of the previous version of clang, that will be used for building the new package
+# - uncomment short_paths option below
 # - run following command:
 # conan create . microblink/stable -pr clang-windows-generic-x64 -s compiler.version=<version-used-for-building> -tf=None
+# - re-comment the short_paths option in cache and upload the package
+# - re-download the package so it won't be in short path cache
 
 
 class LLVMConan(ConanFile):
@@ -23,6 +26,11 @@ class LLVMConan(ConanFile):
     options = {
         'use_clang_cl': [True, False]
     }
+
+    # Uncromment for building on Windows, but comment again after successful build
+    # Build process creates files longer than 260 characters and this confuses the
+    # MS resource compiler, but the end distribution is within 260 character limit
+    # short_paths = True
 
     # forward compatibility for conan v2.0 when we ditch os_build and arch_build
     @property
