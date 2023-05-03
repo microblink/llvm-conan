@@ -13,7 +13,7 @@ import os
 
 class LLVMConan(ConanFile):
     name = "llvm"
-    version = "16.0.2"
+    version = "16.0.3"
     url = "https://github.com/microblink/llvm-conan"
     license = "Apache 2.0 WITH LLVM-exception"
     description = "LLVM toolchain with custom build of libc++"
@@ -59,7 +59,7 @@ class LLVMConan(ConanFile):
             'cmake',
             '-GNinja',
             '-DCMAKE_BUILD_TYPE=Release',
-            '-DLLVM_ENABLE_PROJECTS="clang;lld;lldb;compiler-rt"',
+            '-DLLVM_ENABLE_PROJECTS="clang;lld;lldb;compiler-rt;polly"',
             '-DLLVM_ENABLE_RUNTIMES="libcxx"',
             '-DLLVM_TARGETS_TO_BUILD="AArch64;ARM;WebAssembly;X86"',
             '-DLLVM_ENABLE_LTO=Thin',
