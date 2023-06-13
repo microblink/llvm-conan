@@ -138,19 +138,21 @@ class LLVMConan(ConanFile):
             else:
                 arch = 'x86_64'
 
+            sanitized_package_folder = self.package_folder.replace('\\', '/')
+
             self.conf_info.append('tools.build:cxxflags', [
                 '/clang:-nostdinc++',
                 '/clang:-nostdlib++',
-                '/imsvc', f'{self.package_folder}/include/c++/v1',
-                '/imsvc', f'{self.package_folder}/include/{arch}-pc-windows-msvc/c++/v1',
+                '/imsvc', f'{sanitized_package_folder}/include/c++/v1',
+                '/imsvc', f'{sanitized_package_folder}/include/{arch}-pc-windows-msvc/c++/v1',
             ])
             self.conf_info.append('tools.build:defines', ['-D_CRT_STDIO_ISO_WIDE_SPECIFIERS'])
 
             major_version = Version(self.version).major
 
             link_flags = [
-                f'{self.package_folder}/lib/{arch}-pc-windows-msvc/libc++.lib',
-                f'{self.package_folder}/lib/clang/{major_version}/lib/{arch}-pc-windows-msvc/clang_rt.builtins.lib',
+                f'{sanitized_package_folder}/lib/{arch}-pc-windows-msvc/libc++.lib',
+                f'{sanitized_package_folder}/lib/clang/{major_version}/lib/{arch}-pc-windows-msvc/clang_rt.builtins.lib',
                 'vcruntime.lib',
                 'msvcprt.lib'
             ]
@@ -159,7 +161,7 @@ class LLVMConan(ConanFile):
 
             self.conf_info.update(
                 'user.microblink.cmaketoolchain:cache_variables',
-                {'MB_LLVM_ROOT': self.package_folder}
+                {'MB_LLVM_ROOT': sanitized_package_folder}
             )
 
     # ------------------------------------------------------------------------------
