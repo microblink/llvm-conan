@@ -56,7 +56,8 @@ class LLVMConan(ConanFile):
         cmake.cache_variables.update(
             {
                 'CMAKE_BUILD_TYPE': 'Release',
-                'LLVM_ENABLE_PROJECTS': 'clang;lld;lldb;compiler-rt;polly',
+                # 'LLVM_ENABLE_PROJECTS': 'clang;lld;lldb;compiler-rt;polly',
+                'LLVM_ENABLE_PROJECTS': 'clang;lld;lldb;compiler-rt',
                 'LLVM_ENABLE_RUNTIMES': '"libcxx"',
                 'LLVM_TARGETS_TO_BUILD': 'AArch64;ARM;WebAssembly;X86',
                 # 'LLVM_ENABLE_LTO': 'Thin',
