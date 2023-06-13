@@ -138,13 +138,13 @@ class LLVMConan(ConanFile):
             else:
                 arch = 'x86_64'
 
-            self.conf_info.update('tools.build:cxxflags', [
+            self.conf_info.append('tools.build:cxxflags', [
                 '/clang:-nostdinc++',
                 '/clang:-nostdlib++',
                 '/imsvc', f'{self.package_folder}/include/c++/v1',
                 '/imsvc', f'{self.package_folder}/include/{arch}-pc-windows-msvc/c++/v1',
             ])
-            self.conf_info.update('tools.build:defines', ['-D_CRT_STDIO_ISO_WIDE_SPECIFIERS'])
+            self.conf_info.append('tools.build:defines', ['-D_CRT_STDIO_ISO_WIDE_SPECIFIERS'])
 
             major_version = Version(self.version).major
 
@@ -154,8 +154,8 @@ class LLVMConan(ConanFile):
                 'vcruntime.lib',
                 'msvcprt.lib'
             ]
-            self.conf_info.update('tools.build:exelinkflags', link_flags)
-            self.conf_info.update('tools.build:sharedlinkflags', link_flags)
+            self.conf_info.append('tools.build:exelinkflags', link_flags)
+            self.conf_info.append('tools.build:sharedlinkflags', link_flags)
 
             self.conf_info.update(
                 'user.microblink.cmaketoolchain:cache_variables',
