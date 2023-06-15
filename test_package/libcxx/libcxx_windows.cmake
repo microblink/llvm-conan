@@ -64,7 +64,14 @@ if ( MSVC )
     else()
         set( suffix "x86_64" )
     endif()
-    add_link_options( "${llvm_root}/lib/${arch}-pc-windows-msvc/libc++.lib" "${llvm_root}/lib/clang/${CMAKE_CXX_COMPILER_VERSION}/lib/windows/clang_rt.builtins-${arch}.lib" vcruntime.lib msvcprt.lib )
+    string( REPLACE "." ";" VERSION_LIST ${CMAKE_CXX_COMPILER_VERSION} )
+    list( GET VERSION_LIST 0 compiler_major_version  )
+    add_link_options(
+        "${llvm_root}/lib/${arch}-pc-windows-msvc/libc++.lib"
+        "${MB_LLVM_ROOT}/lib/clang/${compiler_major_version}/lib/${arch}-pc-windows-msvc/clang_rt.builtins.lib"
+        vcruntime.lib
+        msvcprt.lib
+    )
 else()
     add_link_options( -L ${CMAKE_CURRENT_LIST_DIR}/lib -L ${CMAKE_CURRENT_LIST_DIR}/lib/${arch}-pc-windows-msvc -lc++ )
 endif()

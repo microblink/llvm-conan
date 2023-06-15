@@ -137,8 +137,8 @@ class LLVMConan(ConanFile):
         self.buildenv_info.define_path("OBJDUMP", self._define_tool_var('llvm-bjdump'))
         self.buildenv_info.define_path("READELF", self._define_tool_var('llvm-readobj'))
 
-        if self.settings.compiler.libcxx == 'libc++v2':
-            if self.settings.arch == 'armv8':
+        if self.settings_target.compiler.libcxx == 'libc++v2':
+            if self.settings_target.arch == 'armv8':
                 arch = 'aarch64'
             else:
                 arch = 'x86_64'

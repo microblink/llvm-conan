@@ -14,7 +14,7 @@ class TestPackageConan(ConanFile):
         cmake_layout(self)
 
     def build(self):
-        cmake = CMake(self, generator='Ninja')
+        cmake = CMake(self)
         cmake.configure()
         cmake.build()
 
