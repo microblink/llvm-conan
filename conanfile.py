@@ -10,7 +10,7 @@ import os
 # - initialize your terminal with vcvars
 # - set cc and cxx to clang-cl of the previous version of clang, that will be used for building the new package
 # - run following command:
-# conan create . microblink/stable -pr clang-windows-generic-x64 -s compiler.version=<version-used-for-building> -tf=None
+# conan create . --user microblink --channel stable --build-require -pr clang-<new-version>-windows -pr:b clang-<current-version>-windows
 
 
 class LLVMConan(ConanFile):
@@ -56,11 +56,10 @@ class LLVMConan(ConanFile):
         cmake.cache_variables.update(
             {
                 'CMAKE_BUILD_TYPE': 'Release',
-                # 'LLVM_ENABLE_PROJECTS': 'clang;lld;lldb;compiler-rt;polly',
-                'LLVM_ENABLE_PROJECTS': 'clang;lld;lldb;compiler-rt',
+                'LLVM_ENABLE_PROJECTS': 'clang;lld;lldb;compiler-rt;polly',
                 'LLVM_ENABLE_RUNTIMES': 'libcxx',
                 'LLVM_TARGETS_TO_BUILD': 'AArch64;ARM;WebAssembly;X86',
-                # 'LLVM_ENABLE_LTO': 'Thin',
+                'LLVM_ENABLE_LTO': 'Thin',
                 'LLVM_PARALLEL_LINK_JOBS': '3',
                 'LLVM_USE_LINKER': 'lld',
                 'LLVM_ENABLE_EH': 'OFF',
