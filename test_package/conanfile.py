@@ -19,7 +19,6 @@ class TestPackageConan(ConanFile):
         cmake.build()
 
     def test(self):
-        os.chdir('bin')
         self.run('.\\test_package.exe')
 
 # pylint: skip-file
