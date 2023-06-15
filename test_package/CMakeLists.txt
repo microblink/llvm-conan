@@ -9,3 +9,7 @@ set( CMAKE_VERBOSE_MAKEFILE TRUE )
 set( SOURCE_FILES test.cpp )
 
 add_executable( ${PROJECT_NAME} ${SOURCE_FILES} )
+
+if ( SHOULD_USE_LIBCXX )
+    target_compile_definitions( ${PROJECT_NAME} PRIVATE SHOULD_USE_LIBCXX=1 )
+endif()
