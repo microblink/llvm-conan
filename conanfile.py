@@ -148,8 +148,8 @@ class LLVMConan(ConanFile):
             self.conf_info.append('tools.build:cxxflags', [
                 '/clang:-nostdinc++',
                 '/clang:-nostdlib++',
-                '/imsvc', f'{sanitized_package_folder}/include/c++/v1',
-                '/imsvc', f'{sanitized_package_folder}/include/{arch}-pc-windows-msvc/c++/v1',
+                f'/I{sanitized_package_folder}/include/c++/v1',
+                f'/I{sanitized_package_folder}/include/{arch}-pc-windows-msvc/c++/v1',
             ])
             self.conf_info.append('tools.build:defines', ['-D_CRT_STDIO_ISO_WIDE_SPECIFIERS'])
 

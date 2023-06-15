@@ -4,7 +4,6 @@ from conan.tools.cmake import cmake_layout, CMake, CMakeToolchain
 
 class TestPackageConan(ConanFile):
     settings = "os", "build_type", "arch", "compiler"
-    generators = "VCVars"
 
     def requirements(self):
         self.tool_requires(self.tested_reference_str)
