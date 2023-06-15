@@ -109,6 +109,11 @@ class LLVMConan(ConanFile):
         del self.info.settings.build_type
 
     def package_info(self):
+        # cannot use foundation, so need to include it's implementation here
+        # see https://github.com/conan-io/conan/issues/14085
+        self._mb_setup_lto()
+        self._mb_setup_sanitizers()
+
         self.cpp_info.builddirs = [
             os.path.join('cmake', 'Modules')
         ]
@@ -175,5 +180,82 @@ class LLVMConan(ConanFile):
         bin_folder = os.path.join(self.package_folder, 'bin')
         path = os.path.join(bin_folder, self._tool_name(value))
         return path
+
+    # ------------------------------------------------------------------------------
+    # copied from foundation package as a workaround for
+    # https://github.com/conan-io/conan/issues/14085
+    # ------------------------------------------------------------------------------
+    def _mb_setup_lto(self):
+        lto = self.settings_target.get_safe('compiler.link_time_optimization')
+        if lto is not None:
+            lto_enabled = bool(lto)
+        else:
+            lto_enabled = self.settings_target.build_type == 'Release'
+
+        if lto_enabled:
+            cflags = []
+            lflags = []
+            if self.settings_target.compiler in ['clang', 'apple-clang']:
+                cflags = ['-flto=thin']
+                lflags = ['-flto=thin']
+            elif self.settings_target.compiler == 'msvc':
+                cflags = ['-GL']
+                lflags = ['-LTCG']
+            else:
+                cflags = ['-flto']
+                lflags = ['-flto']
+
+            self.conf_info.append('tools.build:cflags', cflags)
+            self.conf_info.append('tools.build:cxxflags', cflags)
+            self.conf_info.append('tools.build:sharedlinkflags', lflags)
+            self.conf_info.append('tools.build:exelinkflags', lflags)
+
+            self.cpp_info.cflags.extend(cflags)
+            self.cpp_info.cxxflags.extend(cflags)
+            self.cpp_info.sharedlinkflags.extend(lflags)
+            self.cpp_info.exelinkflags.extend(lflags)
+
+    def _mb_setup_sanitizers(self):
+        runtime_check_flags = []
+
+        if self.settings_target.compiler in ['clang', 'apple-clang']:
+            sanitizers = self.settings_target.get_safe('compiler.sanitizers')
+            if sanitizers is None:
+                if self.settings_target.build_type in ['Debug', 'DevRelease'] \
+                        and self.settings_target.os in ['Macos', 'Linux']:
+                    sanitizers = "ASan+UBSan"
+                else:
+                    sanitizers = "disabled"
+
+            if sanitizers == "ASan+UBSan":
+                # runtime checks are enabled, so we need to add ASAN/UBSAN linker flags
+                runtime_check_flags = ['-fsanitize=undefined', '-fsanitize=address', '-fsanitize=integer']
+            elif sanitizers == "TSan":
+                runtime_check_flags = ['-fsanitize=thread']
+            elif sanitizers == "MSan":
+                runtime_check_flags = ['-fsanitize=memory']
+            elif sanitizers == 'CFISan':
+                runtime_check_flags = ['-fsanitize=cfi']
+
+        if self.settings_target.compiler == 'msvc':
+            sanitizers = self.settings_target.get_safe('compiler.sanitizers')
+            if sanitizers is None:
+                if self.settings_target.build_type in ['Debug', 'DevRelease']:
+                    sanitizers = "ASan+UBSan"
+                else:
+                    sanitizers = "disabled"
+
+            if sanitizers == 'ASan':
+                runtime_check_flags = ['-fsanitize=address']
+
+        self.cpp_info.cflags.extend(runtime_check_flags)
+        self.cpp_info.cxxflags.extend(runtime_check_flags)
+        self.cpp_info.sharedlinkflags.extend(runtime_check_flags)
+        self.cpp_info.exelinkflags.extend(runtime_check_flags)
+
+        self.conf_info.append('tools.build:cflags', runtime_check_flags)
+        self.conf_info.append('tools.build:cxxflags', runtime_check_flags)
+        self.conf_info.append('tools.build:sharedlinkflags', runtime_check_flags)
+        self.conf_info.append('tools.build:exelinkflags', runtime_check_flags)
 
 # pylint: skip-file
