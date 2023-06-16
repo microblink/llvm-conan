@@ -150,7 +150,7 @@ class LLVMConan(ConanFile):
                 f'/I{sanitized_package_folder}/include/c++/v1',
                 f'/I{sanitized_package_folder}/include/{arch}-pc-windows-msvc/c++/v1',
             ])
-            self.conf_info.append('tools.build:defines', ['-D_CRT_STDIO_ISO_WIDE_SPECIFIERS'])
+            self.conf_info.append('tools.build:defines', ['_CRT_STDIO_ISO_WIDE_SPECIFIERS'])
 
             major_version = Version(self.version).major
 
