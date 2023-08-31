@@ -10,7 +10,7 @@ import os
 # - initialize your terminal with vcvars
 # - set cc and cxx to clang-cl of the previous version of clang, that will be used for building the new package
 # - run following command:
-# conan create . --user microblink --channel stable --build-require -pr clang-<new-version>-windows -pr:b clang-<current-version>-windows
+# conan create . --user microblink --channel main --build-require -pr clang-<new-version>-windows -pr:b clang-<current-version>-windows
 
 
 class LLVMConan(ConanFile):
