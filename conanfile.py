@@ -7,6 +7,8 @@ from conan.tools.scm import Git, Version
 import os
 
 # Package build instructions:
+# - initialize your terminal with vcvars
+# - set cc and cxx to clang-cl of the previous version of clang, that will be used for building the new package
 # - run following command:
 # conan create . --user microblink --channel main --build-require -pr clang-<new-version>-windows -pr:b clang-<current-version>-windows
 
